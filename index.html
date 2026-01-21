@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Book-ad Library</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts: Inter & Playfair Display -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+
+    <!-- Markdown Parser for AI Responses -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                fontFamily: {
+                    sans: ['"Inter"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    serif: ['"Playfair Display"', 'serif'],
+                },
+                extend: {
+                    colors: {
+                        ios: {
+                            bg: '#F2F2F7',        // System Gray 6
+                            card: '#FFFFFF',      // White
+                            text: '#000000',
+                            subtext: '#8E8E93',   // System Gray
+                            separator: '#C6C6C8', // System Gray 3
+                            blue: '#007AFF',
+                            red: '#C8102E',       // HAWK RED (Primary)
+                            grey: '#AFA294',      // HAWK GREY (Accent)
+                            green: '#34C759',
+                            purple: '#AF52DE',    // AI Color
+                        }
+                    },
+                    boxShadow: {
+                        'ios': '0 4px 12px rgba(0, 0, 0, 0.08)',
+                        'ios-float': '0 12px 24px rgba(0, 0, 0, 0.12)',
+                        'glow': '0 0 20px rgba(200, 16, 46, 0.3)',
+                        'inner-light': 'inset 0 1px 2px rgba(0,0,0,0.05)'
+                    },
+                    animation: {
+                        'slide-in-right': 'slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-down': 'slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'blob': 'blob 7s infinite',
+                    },
+                    keyframes: {
+                        slideInRight: {
+                            '0%': { transform: 'translateX(100%)' },
+                            '100%': { transform: 'translateX(0)' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(40px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideDown: {
+                            '0%': { transform: 'translate(-50%, -100%)', opacity: '0' },
+                            '100%': { transform: 'translate(-50%, 0)', opacity: '1' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .view-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            overflow-y: auto; background-color: #F2F2F7; will-change: transform;
+        }
+
+        .active-scale:active { transform: scale(0.97); opacity: 0.8; transition: transform 0.1s; }
+        
+        /* Markdown Styles for AI Response */
+        .ai-response p { margin-bottom: 0.5rem; }
+        .ai-response strong { font-weight: 600; color: #000; }
+        .ai-response ul { list-style-type: disc; padding-left: 1.2rem; margin-bottom: 0.5rem; }
+
+        /* Fancy Gradient Text */
+        .text-gradient {
+            background: linear-gradient(135deg, #C8102E 0%, #AF52DE 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Animated Background Mesh */
+        .mesh-bg {
+            background-color: #ffffff;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(350,90%,96%,1) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(280,80%,96%,1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(350,90%,96%,1) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(280,80%,96%,1) 0px, transparent 50%);
+        }
+    </style>
+</head>
+<body class="bg-ios-bg text-ios-text overflow-hidden h-screen w-screen">
+
+    <div id="root" class="relative w-full h-full overflow-hidden"></div>
+    
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <script>
+        // --- API & AI CONFIGURATION ---
+        const apiKey = ""; // Provided by environment
+
+        async function callGemini(prompt) {
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't generate a response at this time.";
+            } catch (error) {
+                console.error("Gemini API Error:", error);
+                return "Sorry, I'm having trouble connecting to the library brain right now.";
+            }
+        }
+
+        // --- DATA STORE ---
+        const store = {
+            user: null, 
+            activeTab: 'home',
+            books: [
+                { id: 1, title: "The Great Gatsby", author: "F. Scott Fitzgerald", status: "Available", image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=400", insight: null },
+                { id: 2, title: "Clean Code", author: "Robert C. Martin", status: "Borrowed", image: "https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&q=80&w=400", insight: null },
+                { id: 3, title: "Dune", author: "Frank Herbert", status: "Available", image: "https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&q=80&w=400", insight: null },
+                { id: 4, title: "Design Patterns", author: "Erich Gamma", status: "Available", image: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=400", insight: null },
+                { id: 5, title: "Atomic Habits", author: "James Clear", status: "Reserved", image: "https://images.unsplash.com/photo-1592496431122-2349e0fbc666?auto=format&fit=crop&q=80&w=400", insight: null },
+                { id: 6, title: "1984", author: "George Orwell", status: "Available", image: "https://images.unsplash.com/photo-1535905557558-afc4877a26fc?auto=format&fit=crop&q=80&w=400", insight: null },
+                { id: 7, title: "Sapiens", author: "Yuval Noah Harari", status: "Available", image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=400", insight: null },
+                { id: 8, title: "The Pragmatic Programmer", author: "Andy Hunt", status: "Pending", image: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&q=80&w=400", insight: null }
+            ],
+            chatHistory: [
+                { role: 'ai', text: "Hello! I'm your AI Librarian. I know everything about the books in our catalog. How can I help you pick your next read?" }
+            ],
+            history: [],
+        };
+
+        // --- HELPER: TOAST NOTIFICATION ---
+        const showToast = (message, type = 'success') => {
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'fixed top-0 left-0 w-full flex justify-center pointer-events-none z-[100] p-4';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-white text-black' : (type === 'ai' ? 'bg-ios-purple text-white' : 'bg-red-50 text-red-600');
+            const icon = type === 'success' 
+                ? '<i data-lucide="check-circle" class="w-5 h-5 text-ios-green"></i>' 
+                : (type === 'ai' ? '<i data-lucide="sparkles" class="w-5 h-5 text-white"></i>' : '<i data-lucide="x-circle" class="w-5 h-5 text-white"></i>');
+            
+            toast.className = `${bgClass} backdrop-blur-xl shadow-ios-float rounded-full px-6 py-3 flex items-center gap-3 animate-slide-down pointer-events-auto border border-black/5`;
+            toast.innerHTML = `${icon}<span class="font-semibold text-sm">${message}</span>`;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+
+        // --- VIEW COMPONENTS ---
+
+        const LandingView = () => `
+            <div class="view-container mesh-bg flex flex-col justify-between items-center p-8 z-50 overflow-hidden relative">
+                
+                <!-- Decor Blobs -->
+                <div class="absolute top-[-10%] left-[-10%] w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+                <div class="absolute top-[-10%] right-[-10%] w-64 h-64 bg-red-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+                <div class="absolute bottom-[-20%] left-[20%] w-80 h-80 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+
+                <div class="flex-1 flex flex-col justify-center items-center text-center space-y-8 w-full max-w-md relative z-10 animate-slide-up">
+                    <div class="relative">
+                        <div class="absolute inset-0 bg-ios-red blur-2xl opacity-20 rounded-full"></div>
+                        <div class="w-28 h-28 bg-gradient-to-br from-white to-gray-50 rounded-[2.5rem] shadow-ios-float flex items-center justify-center relative animate-float">
+                            <i data-lucide="book-open" class="text-ios-red w-14 h-14"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <h1 class="text-6xl font-serif font-bold text-gradient tracking-tight">Book-ad</h1>
+                        <p class="text-ios-subtext text-lg font-medium">Your personal digital sanctuary.</p>
+                    </div>
+                </div>
+                
+                <div class="w-full max-w-md space-y-4 mb-8 relative z-10 animate-fade-in" style="animation-delay: 0.3s">
+                    <button onclick="router.push('signin')" class="active-scale w-full bg-ios-red hover:bg-red-700 text-white py-4 rounded-2xl font-bold text-lg shadow-glow transition-all">
+                        Sign In
+                    </button>
+                    <button onclick="router.push('signup')" class="active-scale w-full glass text-ios-red hover:bg-white/50 py-4 rounded-2xl font-bold text-lg transition-all">
+                        Create Account
+                    </button>
+                </div>
+            </div>
+        `;
+
+        const SignInView = () => `
+            <div class="view-container mesh-bg z-40 flex flex-col">
+                <!-- Navigation Bar -->
+                <div class="glass sticky top-0 z-20 px-6 h-16 flex items-center justify-between shadow-sm">
+                    <button onclick="router.pop()" class="w-10 h-10 bg-white/80 rounded-full flex items-center justify-center text-ios-red shadow-sm active-scale">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </button>
+                    <span class="font-bold text-lg">Sign In</span>
+                    <div class="w-10"></div>
+                </div>
+
+                <div class="flex-1 flex flex-col justify-center px-6 max-w-md mx-auto w-full animate-slide-up">
+                    <div class="text-center mb-10">
+                        <h1 class="text-4xl font-serif font-bold mb-2">Welcome Back</h1>
+                        <p class="text-ios-subtext">Access your library collection</p>
+                    </div>
+
+                    <form onsubmit="Actions.login(event)" class="space-y-6">
+                        <div class="glass rounded-3xl p-1 shadow-sm">
+                            <div class="bg-white/50 rounded-2xl px-4 py-3 mb-1 transition-colors focus-within:bg-white">
+                                <label class="block text-xs font-bold text-ios-subtext uppercase tracking-wider mb-1">Username</label>
+                                <input type="text" id="username" placeholder="admin or student" class="w-full bg-transparent outline-none text-lg font-medium placeholder-gray-300">
+                            </div>
+                            <div class="bg-white/50 rounded-2xl px-4 py-3 transition-colors focus-within:bg-white">
+                                <label class="block text-xs font-bold text-ios-subtext uppercase tracking-wider mb-1">Password</label>
+                                <input type="password" id="password" placeholder="••••••••" class="w-full bg-transparent outline-none text-lg font-medium placeholder-gray-300">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="active-scale w-full bg-gradient-to-r from-ios-red to-purple-600 text-white py-4 rounded-2xl font-bold text-lg shadow-ios-float hover:shadow-glow transition-all">
+                            Log In
+                        </button>
+                    </form>
+                    
+                    <div class="mt-8 text-center">
+                        <button class="text-ios-subtext text-sm font-medium hover:text-ios-text transition-colors">Forgot Password?</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const SignUpView = () => `
+            <div class="view-container mesh-bg z-40 flex flex-col">
+                <div class="glass sticky top-0 z-20 px-6 h-16 flex items-center justify-between shadow-sm">
+                    <button onclick="router.pop()" class="w-10 h-10 bg-white/80 rounded-full flex items-center justify-center text-ios-red shadow-sm active-scale">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </button>
+                    <span class="font-bold text-lg">Create Account</span>
+                    <div class="w-10"></div>
+                </div>
+
+                <div class="flex-1 flex flex-col justify-center px-6 max-w-md mx-auto w-full animate-slide-up">
+                    <div class="text-center mb-10">
+                        <h1 class="text-4xl font-serif font-bold mb-2">Join Us</h1>
+                        <p class="text-ios-subtext">Start your reading journey today</p>
+                    </div>
+
+                    <div class="glass rounded-3xl p-1 shadow-sm mb-6">
+                        <div class="bg-white/50 rounded-2xl px-4 py-3 mb-1">
+                            <label class="block text-xs font-bold text-ios-subtext uppercase tracking-wider mb-1">Full Name</label>
+                            <input type="text" placeholder="John Doe" class="w-full bg-transparent outline-none text-lg font-medium">
+                        </div>
+                        <div class="bg-white/50 rounded-2xl px-4 py-3 mb-1">
+                            <label class="block text-xs font-bold text-ios-subtext uppercase tracking-wider mb-1">Email</label>
+                            <input type="email" placeholder="john@example.com" class="w-full bg-transparent outline-none text-lg font-medium">
+                        </div>
+                        <div class="bg-white/50 rounded-2xl px-4 py-3">
+                            <label class="block text-xs font-bold text-ios-subtext uppercase tracking-wider mb-1">Password</label>
+                            <input type="password" placeholder="Create Password" class="w-full bg-transparent outline-none text-lg font-medium">
+                        </div>
+                    </div>
+
+                    <button onclick="Actions.signup()" class="active-scale w-full bg-gradient-to-r from-ios-red to-purple-600 text-white py-4 rounded-2xl font-bold text-lg shadow-ios-float hover:shadow-glow transition-all">
+                        Sign Up
+                    </button>
+                </div>
+            </div>
+        `;
+
+        const MainAppView = (tabName) => {
+            const activeTab = tabName || store.activeTab;
+            const isLibrarian = store.user === 'admin';
+            let contentHTML = '';
+            
+            if (activeTab === 'home') contentHTML = isLibrarian ? LibrarianHome() : BorrowerHome();
+            else if (activeTab === 'search') contentHTML = SearchView();
+            else if (activeTab === 'shelf') contentHTML = ShelfView();
+            else if (activeTab === 'profile') contentHTML = ProfileView();
+
+            return `
+                <div class="view-container bg-ios-bg animate-fade-in z-30 flex flex-col h-full">
+                    <div class="flex-1 overflow-y-auto no-scrollbar pb-24" id="main-content">${contentHTML}</div>
+                    
+                    <!-- AI Floating Action Button (Only for Borrowers on Home) -->
+                    ${!isLibrarian && activeTab === 'home' ? `
+                    <button onclick="router.push('ai-chat')" class="fixed bottom-24 right-6 w-14 h-14 bg-gradient-to-br from-ios-purple to-blue-500 text-white rounded-full shadow-ios-float flex items-center justify-center animate-fade-in z-40 active-scale hover:scale-105 transition-all border-2 border-white">
+                        <i data-lucide="sparkles" class="w-6 h-6"></i>
+                    </button>
+                    ` : ''}
+
+                    <div class="glass fixed bottom-0 w-full h-20 px-6 flex justify-between items-start pt-3 pb-8 z-50 rounded-t-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] border-t border-white/50">
+                        <button onclick="router.switchTab('home')" class="flex flex-col items-center space-y-1 w-12 ${activeTab === 'home' ? 'text-ios-red' : 'text-ios-subtext'} transition-colors duration-300">
+                            <i data-lucide="home" class="w-6 h-6 ${activeTab === 'home' ? 'fill-current' : ''}"></i><span class="text-[10px] font-bold">Home</span>
+                        </button>
+                        <button onclick="router.switchTab('search')" class="flex flex-col items-center space-y-1 w-12 ${activeTab === 'search' ? 'text-ios-red' : 'text-ios-subtext'} transition-colors duration-300">
+                            <i data-lucide="search" class="w-6 h-6"></i><span class="text-[10px] font-bold">Search</span>
+                        </button>
+                        ${!isLibrarian ? `
+                        <button onclick="router.switchTab('shelf')" class="flex flex-col items-center space-y-1 w-12 ${activeTab === 'shelf' ? 'text-ios-red' : 'text-ios-subtext'} transition-colors duration-300">
+                            <i data-lucide="library" class="w-6 h-6 ${activeTab === 'shelf' ? 'fill-current' : ''}"></i><span class="text-[10px] font-bold">Shelf</span>
+                        </button>
+                        ` : ''}
+                        <button onclick="router.switchTab('profile')" class="flex flex-col items-center space-y-1 w-12 ${activeTab === 'profile' ? 'text-ios-red' : 'text-ios-subtext'} transition-colors duration-300">
+                            <i data-lucide="user" class="w-6 h-6 ${activeTab === 'profile' ? 'fill-current' : ''}"></i><span class="text-[10px] font-bold">Profile</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        };
+
+        // --- SUB VIEWS (No Changes needed to logic, just styling adjustments in MainAppView wrapper) ---
+
+        const BorrowerHome = () => `
+            <div class="p-5 pt-12">
+                <div class="flex justify-between items-end mb-6 animate-slide-up">
+                    <div>
+                        <p class="text-ios-subtext text-xs font-bold uppercase tracking-widest mb-1">Welcome Back</p>
+                        <h1 class="text-4xl font-serif font-bold text-black">For You</h1>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-pink-200 to-purple-200 overflow-hidden border-2 border-white shadow-md p-0.5">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User" class="rounded-full">
+                    </div>
+                </div>
+                <div class="relative w-full h-[28rem] rounded-[2.5rem] overflow-hidden shadow-ios-float mb-10 active-scale cursor-pointer animate-fade-in group" onclick="Actions.viewBook(1)">
+                    <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 p-8 text-white">
+                        <span class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider mb-3 inline-block border border-white/10">Classic of the Week</span>
+                        <h2 class="text-4xl font-serif font-bold mb-2 leading-tight">The Great Gatsby</h2>
+                        <p class="text-white/80 line-clamp-2 text-sm font-medium">The story of the fabulously wealthy Jay Gatsby and his love for the beautiful Daisy Buchanan.</p>
+                    </div>
+                </div>
+                <h3 class="text-xl font-bold mb-4 px-1">New Arrivals</h3>
+                <div class="flex overflow-x-auto gap-5 pb-6 no-scrollbar px-1">
+                    ${store.books.slice(2).map((b, i) => `
+                        <div class="flex-shrink-0 w-36 flex flex-col active-scale group animate-fade-in" style="animation-delay: ${i * 0.1}s" onclick="Actions.viewBook(${b.id})">
+                            <div class="aspect-[2/3] bg-gray-200 rounded-2xl shadow-md mb-3 relative overflow-hidden group-hover:shadow-xl transition-shadow">
+                                <img src="${b.image}" class="w-full h-full object-cover">
+                            </div>
+                            <h4 class="font-bold text-sm leading-tight mb-1 truncate">${b.title}</h4>
+                            <p class="text-xs text-ios-subtext truncate font-medium">${b.author}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        const LibrarianHome = () => {
+            const pendingRequests = store.books.filter(b => b.status === 'Pending');
+            const totalBooks = store.books.length;
+            const borrowedBooks = store.books.filter(b => b.status === 'Borrowed').length;
+
+            return `
+            <div class="p-5 pt-12">
+                <div class="flex justify-between items-end mb-6 animate-slide-up">
+                    <div><h1 class="text-4xl font-serif font-bold text-black">Dashboard</h1></div>
+                    <div class="w-12 h-12 rounded-full bg-ios-red text-white flex items-center justify-center font-bold text-xl shadow-lg shadow-red-200">L</div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-8 animate-fade-in">
+                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-ios-bg">
+                        <div class="text-ios-red mb-3 bg-red-50 w-10 h-10 rounded-full flex items-center justify-center"><i data-lucide="bell" class="w-5 h-5"></i></div>
+                        <h3 class="text-3xl font-bold mb-1">${pendingRequests.length}</h3>
+                        <p class="text-ios-subtext text-xs font-bold uppercase tracking-wide">Pending</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-ios-bg">
+                        <div class="text-ios-blue mb-3 bg-blue-50 w-10 h-10 rounded-full flex items-center justify-center"><i data-lucide="book-open" class="w-5 h-5"></i></div>
+                        <h3 class="text-3xl font-bold mb-1">${borrowedBooks}</h3>
+                        <p class="text-ios-subtext text-xs font-bold uppercase tracking-wide">Borrowed</p>
+                    </div>
+                </div>
+                <h3 class="text-xl font-bold mb-4 px-1">Approval Queue</h3>
+                <div class="space-y-4 pb-12">
+                    ${pendingRequests.length > 0 ? pendingRequests.map(b => `
+                        <div class="bg-white p-4 rounded-3xl shadow-sm border border-ios-bg flex flex-col gap-4 animate-fade-in">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-20 bg-gray-200 rounded-xl shadow-inner overflow-hidden flex-shrink-0">
+                                    <img src="${b.image}" class="w-full h-full object-cover">
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-ios-subtext uppercase mb-1">Request for</p>
+                                    <p class="text-lg font-serif font-bold text-black leading-tight mb-1">${b.title}</p>
+                                    <p class="text-xs text-ios-subtext">by ${b.author}</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-3">
+                                <button onclick="Actions.denyRequest(${b.id})" class="flex-1 bg-gray-100 text-black py-3 rounded-2xl text-sm font-bold active-scale hover:bg-gray-200 transition-colors">Deny</button>
+                                <button onclick="Actions.approveRequest(${b.id})" class="flex-1 bg-ios-red text-white py-3 rounded-2xl text-sm font-bold active-scale shadow-lg shadow-red-100 hover:bg-red-700 transition-colors">Approve</button>
+                            </div>
+                        </div>
+                    `).join('') : `
+                        <div class="text-center py-16 text-ios-subtext bg-white/50 rounded-3xl border-2 border-dashed border-gray-200">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i data-lucide="check" class="w-8 h-8 text-gray-400"></i>
+                            </div>
+                            <p class="font-medium">All caught up!</p>
+                        </div>
+                    `}
+                </div>
+            </div>
+            `;
+        };
+
+        const SearchView = () => `
+            <div class="p-0 pt-0">
+                <div class="glass sticky top-0 z-20 px-4 py-2 pt-14 pb-4">
+                    <h1 class="text-3xl font-serif font-bold mb-3 px-2">Search</h1>
+                    <div class="bg-gray-100 rounded-2xl flex items-center px-4 py-3 transition-colors focus-within:bg-white focus-within:ring-2 focus-within:ring-ios-red/20">
+                        <i data-lucide="search" class="text-ios-subtext w-5 h-5 mr-3"></i>
+                        <input type="text" placeholder="Title, Author, or ISBN" class="bg-transparent w-full outline-none text-base font-medium placeholder-gray-400">
+                    </div>
+                </div>
+                <div class="p-5 pb-24 grid grid-cols-2 gap-5">
+                    ${store.books.map((b, i) => `
+                        <div class="flex flex-col active-scale cursor-pointer animate-fade-in" style="animation-delay: ${i * 0.05}s" onclick="Actions.viewBook(${b.id})">
+                            <div class="aspect-[2/3] bg-gray-200 rounded-2xl shadow-md mb-3 relative overflow-hidden">
+                                <img src="${b.image}" class="w-full h-full object-cover">
+                                ${b.status !== 'Available' ? `<div class="absolute top-2 right-2 bg-white/90 backdrop-blur-md px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide shadow-sm border border-white/20">${b.status}</div>` : ''}
+                            </div>
+                            <h4 class="font-bold text-sm leading-tight mb-1 line-clamp-1">${b.title}</h4>
+                            <p class="text-xs text-ios-subtext line-clamp-1 font-medium">${b.author}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        const ShelfView = () => {
+            const reserved = store.books.filter(b => b.status === 'Reserved' || b.status === 'Pending');
+            const borrowed = store.books.filter(b => b.status === 'Borrowed');
+            return `
+            <div class="p-5 pt-12">
+                <h1 class="text-4xl font-serif font-bold mb-8">My Shelf</h1>
+                <div class="space-y-10">
+                    <div>
+                        <div class="flex items-center gap-2 mb-5 px-1"><i data-lucide="clock" class="text-ios-red w-5 h-5"></i><h3 class="text-lg font-bold uppercase tracking-wider text-ios-subtext">Reserved & Pending</h3></div>
+                        ${reserved.length > 0 ? reserved.map(b => `
+                            <div class="bg-white p-4 rounded-3xl shadow-sm border border-ios-bg flex items-center gap-5 mb-4 active-scale cursor-pointer" onclick="Actions.viewBook(${b.id})">
+                                <div class="w-14 h-20 bg-gray-200 rounded-xl shadow-inner overflow-hidden flex-shrink-0"><img src="${b.image}" class="w-full h-full object-cover"></div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-bold text-lg leading-tight truncate mb-1">${b.title}</h4>
+                                    <p class="text-ios-subtext text-sm mb-2 truncate">${b.author}</p>
+                                    <span class="inline-block px-3 py-1 ${b.status === 'Pending' ? 'bg-yellow-50 text-yellow-700 border-yellow-100' : 'bg-orange-50 text-orange-700 border-orange-100'} border text-[10px] font-extrabold rounded-full uppercase tracking-wide">${b.status}</span>
+                                </div>
+                                ${b.status === 'Reserved' ? `<button onclick="event.stopPropagation(); Actions.cancelReservation(${b.id})" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-ios-subtext hover:bg-red-50 hover:text-red-500 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>` : ''}
+                            </div>
+                        `).join('') : `<p class="text-ios-subtext text-sm italic px-1">No active reservations.</p>`}
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 mb-5 px-1"><i data-lucide="book-open" class="text-ios-green w-5 h-5"></i><h3 class="text-lg font-bold uppercase tracking-wider text-ios-subtext">Currently Borrowed</h3></div>
+                        ${borrowed.length > 0 ? borrowed.map(b => `
+                            <div class="bg-white p-4 rounded-3xl shadow-sm border border-ios-bg flex items-center gap-5 mb-4 active-scale cursor-pointer" onclick="Actions.viewBook(${b.id})">
+                                <div class="w-14 h-20 bg-gray-200 rounded-xl shadow-inner overflow-hidden flex-shrink-0"><img src="${b.image}" class="w-full h-full object-cover"></div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-bold text-lg leading-tight truncate mb-1">${b.title}</h4>
+                                    <p class="text-ios-subtext text-sm mb-2 truncate">${b.author}</p>
+                                    <div class="flex items-center text-ios-subtext text-xs font-medium"><i data-lucide="calendar" class="w-3 h-3 mr-1"></i> Due in 5 days</div>
+                                </div>
+                                <button onclick="event.stopPropagation(); Actions.returnBook(${b.id})" class="px-5 py-2.5 bg-black text-white text-xs font-bold rounded-xl hover:bg-gray-800 transition-colors active:scale-95 shadow-md">Return</button>
+                            </div>
+                        `).join('') : `<p class="text-ios-subtext text-sm italic px-1">No books currently borrowed.</p>`}
+                    </div>
+                </div>
+            </div>
+            `;
+        };
+
+        const ProfileView = () => `
+            <div class="p-5 pt-12">
+                <h1 class="text-4xl font-serif font-bold mb-8">Profile</h1>
+                <div class="bg-white rounded-3xl shadow-sm p-6 flex items-center gap-5 mb-8 border border-ios-bg">
+                    <div class="w-20 h-20 rounded-full bg-gradient-to-br from-pink-200 to-purple-200 overflow-hidden p-1 shadow-inner"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Avatar" class="rounded-full bg-white"></div>
+                    <div><h2 class="text-2xl font-bold text-black">${store.user === 'admin' ? 'Head Librarian' : 'Student Reader'}</h2><p class="text-ios-subtext text-sm font-medium">ID: 8829102</p></div>
+                </div>
+                <button onclick="router.push('landing')" class="w-full py-4 text-ios-red font-bold bg-white rounded-2xl shadow-sm active:bg-gray-50 border border-ios-bg hover:bg-red-50 transition-colors">Log Out</button>
+            </div>
+        `;
+
+        const AIChatView = () => `
+            <div class="view-container bg-ios-bg animate-slide-up z-50 flex flex-col h-full">
+                <div class="glass sticky top-0 z-10 px-4 h-16 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 text-white flex items-center justify-center shadow-md animate-pulse-slow">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        </div>
+                        <span class="font-bold text-lg">AI Librarian</span>
+                    </div>
+                    <button onclick="router.pop()" class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-300 transition-colors">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chat-messages">
+                    ${store.chatHistory.map(msg => `
+                        <div class="flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in">
+                            <div class="max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.role === 'user' ? 'bg-ios-blue text-white rounded-tr-none' : 'bg-white text-black rounded-tl-none ai-response border border-gray-100'}">
+                                ${msg.text}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="p-4 bg-white border-t border-ios-separator/20 pb-8">
+                    <form onsubmit="Actions.sendChatMessage(event)" class="flex gap-3">
+                        <input type="text" id="chat-input" placeholder="Ask for a recommendation..." class="flex-1 bg-gray-100 px-5 py-3.5 rounded-2xl outline-none focus:ring-2 focus:ring-ios-purple/50 transition-all font-medium text-black placeholder-gray-400">
+                        <button type="submit" class="bg-ios-purple text-white p-3.5 rounded-2xl shadow-md active-scale hover:bg-purple-600 transition-colors">
+                            <i data-lucide="send" class="w-5 h-5"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        const BookModal = (book) => `
+            <div class="view-container bg-white z-50 animate-slide-in-right flex flex-col h-full">
+                <div class="glass sticky top-0 z-10 px-4 h-14 flex items-center justify-between">
+                    <button onclick="router.pop()" class="text-ios-red flex items-center gap-1 font-bold text-sm bg-red-50 px-3 py-1.5 rounded-full hover:bg-red-100 transition-colors"><i data-lucide="chevron-left" class="w-4 h-4"></i> Back</button>
+                    <div class="w-12"></div>
+                </div>
+                <div class="flex-1 overflow-y-auto p-6 pb-32">
+                    <div class="w-56 h-80 bg-gray-200 rounded-2xl shadow-2xl mx-auto mb-10 transform transition-transform hover:scale-105 overflow-hidden border-4 border-white"><img src="${book.image}" class="w-full h-full object-cover"></div>
+                    <div class="text-center mb-10">
+                        <h2 class="text-3xl font-serif font-bold mb-2 tracking-tight text-black">${book.title}</h2>
+                        <p class="text-ios-red font-medium text-lg mb-4">${book.author}</p>
+                        <div class="flex justify-center gap-3">
+                            <span class="px-4 py-1.5 bg-gray-100 rounded-full text-xs font-bold text-gray-500 uppercase tracking-wide border border-gray-200">${book.status}</span>
+                            <span class="px-4 py-1.5 bg-yellow-50 rounded-full text-xs font-bold text-yellow-600 border border-yellow-100 flex items-center gap-1"><i data-lucide="star" class="w-3 h-3 fill-current"></i> 4.8</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-3xl p-6 mb-8 border border-gray-100" id="book-desc-container">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-lg">Insight</h3>
+                            <button onclick="Actions.getAIInsight(${book.id})" class="text-xs bg-white text-ios-purple px-3 py-1.5 rounded-full border border-ios-purple/20 font-bold flex items-center gap-1 active-scale shadow-sm hover:bg-purple-50 transition-colors">
+                                <i data-lucide="sparkles" class="w-3 h-3"></i> AI Analysis
+                            </button>
+                        </div>
+                        <div id="ai-insight-text-${book.id}" class="text-ios-subtext leading-relaxed text-base ai-response">
+                            ${book.insight || "Click 'AI Analysis' to get a smart summary and themes for this book."}
+                        </div>
+                    </div>
+
+                    ${(() => {
+                        if (book.status === 'Available') return `<button onclick="Actions.reserve(${book.id})" class="active-scale w-full bg-ios-red text-white py-4 rounded-2xl font-bold text-lg shadow-ios-float sticky bottom-8 hover:bg-red-700 transition-colors">Reserve Book</button>`;
+                        else if (book.status === 'Borrowed') return `<button onclick="Actions.returnBook(${book.id})" class="active-scale w-full bg-black text-white py-4 rounded-2xl font-bold text-lg shadow-ios-float sticky bottom-8 hover:bg-gray-800 transition-colors">Return Book</button>`;
+                        else if (book.status === 'Reserved') return `<button onclick="Actions.cancelReservation(${book.id})" class="active-scale w-full bg-gray-100 text-ios-red py-4 rounded-2xl font-bold text-lg shadow-sm sticky bottom-8 border border-gray-200 hover:bg-gray-200 transition-colors">Cancel Reservation</button>`;
+                        else return `<button disabled class="w-full bg-gray-100 text-gray-400 py-4 rounded-2xl font-bold text-lg cursor-not-allowed sticky bottom-8 flex items-center justify-center gap-2 border border-gray-200"><i data-lucide="clock" class="w-5 h-5"></i> ${book.status}</button>`;
+                    })()}
+                </div>
+            </div>
+        `;
+
+        // --- CORE ---
+        const router = {
+            root: document.getElementById('root'),
+            render(html) { this.root.innerHTML = html; lucide.createIcons(); },
+            push(viewName, data = null) {
+                store.history.push(viewName);
+                if (viewName === 'book-detail') this.render(BookModal(data));
+                else if (viewName === 'app') this.render(MainAppView());
+                else if (viewName === 'signin') this.render(SignInView());
+                else if (viewName === 'signup') this.render(SignUpView());
+                else if (viewName === 'ai-chat') this.render(AIChatView());
+                else if (viewName === 'landing') { store.history=['landing']; this.render(LandingView()); }
+            },
+            pop() {
+                if (store.history.length > 1) {
+                    store.history.pop();
+                    const prev = store.history[store.history.length - 1];
+                    if (prev === 'landing') this.render(LandingView());
+                    else if (prev === 'app') this.render(MainAppView());
+                    else if (prev === 'book-detail') { this.render(MainAppView()); } 
+                    else { this.render(MainAppView()); }
+                }
+            },
+            switchTab(tab) { store.activeTab = tab; this.render(MainAppView(tab)); }
+        };
+
+        const Actions = {
+            login: (e) => {
+                e.preventDefault();
+                const u = document.getElementById('username').value.toLowerCase();
+                store.user = u === 'admin' ? 'admin' : 'borrower';
+                store.activeTab = 'home'; // Reset tab on login
+                router.push('app');
+                showToast(`Welcome back, ${store.user === 'admin' ? 'Librarian' : 'Reader'}`);
+            },
+            signup: () => { store.user = 'borrower'; store.activeTab = 'home'; router.push('app'); showToast("Account created!"); },
+            viewBook: (id) => router.push('book-detail', store.books.find(b => b.id === id)),
+            
+            reserve: (id) => {
+                const i = store.books.findIndex(b => b.id === id);
+                if (i !== -1) {
+                    store.books[i].status = 'Pending';
+                    showToast("Request Sent! Waiting for approval.");
+                    router.pop();
+                }
+            },
+            approveRequest: (id) => {
+                const i = store.books.findIndex(b => b.id === id);
+                if (i !== -1) {
+                    store.books[i].status = 'Borrowed';
+                    showToast("Request Approved", "success");
+                    router.switchTab('home');
+                }
+            },
+            denyRequest: (id) => {
+                const i = store.books.findIndex(b => b.id === id);
+                if (i !== -1) {
+                    store.books[i].status = 'Available';
+                    showToast("Request Denied", "error");
+                    router.switchTab('home');
+                }
+            },
+            returnBook: (id) => {
+                const i = store.books.findIndex(b => b.id === id);
+                if (i !== -1) {
+                    store.books[i].status = 'Available';
+                    showToast("Book Returned");
+                    router.switchTab(store.activeTab); // Stay on current view
+                }
+            },
+            cancelReservation: (id) => {
+                const i = store.books.findIndex(b => b.id === id);
+                if (i !== -1) {
+                    store.books[i].status = 'Available';
+                    showToast("Reservation Cancelled", "error");
+                    router.switchTab(store.activeTab);
+                }
+            },
+
+            // --- AI ACTIONS ---
+            
+            getAIInsight: async (bookId) => {
+                const book = store.books.find(b => b.id === bookId);
+                const container = document.getElementById(`ai-insight-text-${bookId}`);
+                if (container) {
+                    container.innerHTML = '<span class="animate-pulse text-ios-purple flex items-center gap-2"><i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Reading book...</span>';
+                    const prompt = `Give me a 3-sentence hook and thematic analysis for the book "${book.title}" by ${book.author}. Make it exciting.`;
+                    const result = await callGemini(prompt);
+                    
+                    // Convert basic markdown to HTML
+                    const html = marked.parse(result);
+                    book.insight = html; // Cache it
+                    container.innerHTML = html;
+                    showToast("AI Insight Generated", "ai");
+                }
+            },
+
+            sendChatMessage: async (e) => {
+                e.preventDefault();
+                const input = document.getElementById('chat-input');
+                const text = input.value.trim();
+                if (!text) return;
+
+                // Add User Message
+                store.chatHistory.push({ role: 'user', text });
+                router.render(AIChatView()); // Re-render to show message
+                
+                // Scroll to bottom
+                const chatContainer = document.getElementById('chat-messages');
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                // Prepare AI Prompt
+                const catalog = store.books.map(b => `${b.title} by ${b.author} (${b.status})`).join(", ");
+                const systemPrompt = `You are a helpful librarian AI for Book-ad. The current library catalog is: [${catalog}]. The user asks: "${text}". Recommend a book from the catalog if it fits, or suggest a general classic if not. Keep it short and friendly.`;
+
+                // Call API
+                const aiResponseText = await callGemini(systemPrompt);
+                
+                // Add AI Message
+                store.chatHistory.push({ role: 'ai', text: marked.parse(aiResponseText) });
+                router.render(AIChatView());
+                
+                // Focus back
+                document.getElementById('chat-input').focus();
+            }
+        };
+
+        // Init
+        store.history.push('landing');
+        router.render(LandingView());
+    </script>
+</body>
+</html>
